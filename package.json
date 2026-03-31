@@ -19,6 +19,7 @@
   ],
   "scripts": {
     "build": "unbuild",
+    "maya": "node dist/cli.mjs",
     "test": "vitest run"
   },
   "keywords": [],

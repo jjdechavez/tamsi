@@ -9,7 +9,6 @@ describe("createMayaApp", () => {
       middlewareCalled = true;
       await next();
     });
-
     const route = defineEventHandler(() => ({ ok: true }));
 
     const app = createMayaApp({
@@ -17,7 +16,7 @@ describe("createMayaApp", () => {
       routes: [{ path: "/hello", handler: route }]
     });
 
-    const response = await app.fetch(new Request("http://localhost/hello"));
+    const response = await app.request("http://localhost/hello");
     const body = await response.json();
     expect(body).toEqual({ ok: true });
     expect(middlewareCalled).toBe(true);

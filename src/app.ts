@@ -1,8 +1,6 @@
 import { H3, toMiddleware, type EventHandler, type Middleware } from "h3";
 import type { MayaConfig } from "./config.js";
 
-const defaultMiddlewarePath = "/";
-
 function resolveMiddleware(handler: EventHandler | Middleware | string): Middleware {
   if (typeof handler === "string") {
     throw new TypeError(
@@ -27,9 +25,12 @@ export function createMayaApp(config: MayaConfig): H3 {
 
   if (config.middleware) {
     for (const item of config.middleware) {
-      const basePath = item.path ?? defaultMiddlewarePath;
       const middleware = resolveMiddleware(item.handler);
-      app.use(basePath, middleware);
+      if (item.path) {
+        app.use(item.path, middleware);
+      } else {
+        app.use(middleware);
+      }
     }
   }
 
