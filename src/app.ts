@@ -1,5 +1,14 @@
-import { H3, toMiddleware, type EventHandler, type Middleware } from "h3";
-import type { MayaConfig } from "./config.js";
+import {
+  H3,
+  serveStatic,
+  withBase,
+  toMiddleware,
+  type EventHandler,
+  type Middleware
+} from "h3";
+import { readFile, stat } from "node:fs/promises";
+import { isAbsolute, resolve } from "node:path";
+import type { MayaConfig, MayaRouteMethod } from "./config.js";
 
 function resolveMiddleware(handler: EventHandler | Middleware | string): Middleware {
   if (typeof handler === "string") {
@@ -23,6 +32,28 @@ function resolveMiddleware(handler: EventHandler | Middleware | string): Middlew
 export function createMayaApp(config: MayaConfig): H3 {
   const app = new H3();
 
+  const health = config.health ?? { enabled: true };
+  if (health.enabled !== false) {
+    app.get(health.path ?? "/health", () => ({ ok: true }));
+  }
+
+  if (config.publicDir) {
+    const publicPath = config.publicPath ?? "/public";
+    const publicDir = isAbsolute(config.publicDir)
+      ? config.publicDir
+      : resolve(process.cwd(), config.publicDir);
+    const handler = withBase(publicPath, (event) =>
+      serveStatic(event, {
+        getMeta: async (id) => resolveStaticMeta(publicDir, id),
+        getContents: async (id) => resolveStaticContents(publicDir, id)
+      })
+    );
+    const matchPath = publicPath.endsWith("/")
+      ? `${publicPath}**`
+      : `${publicPath}/**`;
+    app.use(matchPath, handler);
+  }
+
   if (config.middleware) {
     for (const item of config.middleware) {
       const middleware = resolveMiddleware(item.handler);
@@ -35,10 +66,81 @@ export function createMayaApp(config: MayaConfig): H3 {
   }
 
   if (config.routes) {
+    const basePath = config.routesBasePath ?? "";
     for (const route of config.routes) {
-      app.use(route.path, route.handler);
+      const fullPath = joinPath(basePath, route.path);
+      const method = route.method ?? "ALL";
+      const options = route.middleware ? { middleware: route.middleware } : undefined;
+      registerRoute(app, method, fullPath, route.handler, options);
     }
   }
 
   return app;
+}
+
+function registerRoute(
+  app: H3,
+  method: MayaRouteMethod,
+  path: string,
+  handler: EventHandler,
+  options?: { middleware?: Middleware[] }
+) {
+  if (method === "ALL") {
+    app.all(path, handler, options);
+    return;
+  }
+
+  app.on(method, path, handler, options);
+}
+
+function joinPath(basePath: string, routePath: string) {
+  if (!basePath) {
+    return routePath;
+  }
+
+  const base = basePath.endsWith("/") ? basePath.slice(0, -1) : basePath;
+  const tail = routePath.startsWith("/") ? routePath : `/${routePath}`;
+  return `${base}${tail}`;
+}
+
+function resolveStaticPath(dir: string, id: string) {
+  const resolved = resolve(dir, `.${id}`);
+  const normalizedDir = dir.endsWith("/") ? dir : `${dir}/`;
+  if (!resolved.startsWith(normalizedDir)) {
+    return undefined;
+  }
+  return resolved;
+}
+
+async function resolveStaticMeta(dir: string, id: string) {
+  const resolved = resolveStaticPath(dir, id);
+  if (!resolved) {
+    return undefined;
+  }
+
+  try {
+    const stats = await stat(resolved);
+    if (!stats.isFile()) {
+      return undefined;
+    }
+    return {
+      size: stats.size,
+      mtime: stats.mtime
+    };
+  } catch {
+    return undefined;
+  }
+}
+
+async function resolveStaticContents(dir: string, id: string) {
+  const resolved = resolveStaticPath(dir, id);
+  if (!resolved) {
+    return undefined;
+  }
+
+  try {
+    return await readFile(resolved);
+  } catch {
+    return undefined;
+  }
 }
