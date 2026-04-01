@@ -8,5 +8,5 @@ Run locally:
 
 Open:
 
-- http://localhost:5555/public/
-- http://localhost:5555/
+- http://localhost:5555/ - Shows static file
+- http://localhost:5555/api - Api sample
