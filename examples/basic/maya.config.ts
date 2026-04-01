@@ -2,7 +2,10 @@ import { defineMayaConfig } from "maya";
 import handler from "./routes/index";
 
 export default defineMayaConfig({
-  port: 8080,
+  port: 5555,
   shutdownTimeoutMs: 8000,
-  routes: [{ path: "/", handler }]
+  routes: [{ path: "/", handler }],
+  onBeforeClose: () => {
+    console.warn("Prepare for landing...")
+  }
 });

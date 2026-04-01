@@ -109,7 +109,8 @@ async function startServer(
     hostname: host,
     showURL: false,
     name: "Maya",
-    isProd: mode === "production"
+    isProd: mode === "production",
+    autoClose: false
   });
 
   const url = listener.url;
