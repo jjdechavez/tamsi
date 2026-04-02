@@ -75,9 +75,17 @@ type MayaServerStartupArgs = {
   host?: string
 }
 
+type MayaServerOptions = {
+  envFile?: string
+  quiet?: boolean
+  healthPath?: string
+  healthDisabled?: boolean
+}
+
 export async function startServer(
   args: MayaServerStartupArgs,
-  mode: "dev" | "production"
+  mode: "dev" | "production",
+  options: MayaServerOptions = {}
 ): Promise<{ listener: Listener; config: MayaConfig }> {
   const cwd = process.cwd();
   const moduleCache = mode === "production";
@@ -86,7 +94,8 @@ export async function startServer(
   const { config, configFile } = await loadMayaConfig({
     cwd,
     configFile: typeof args.config === "string" ? args.config : undefined,
-    import: (id) => resolver.import(id)
+    import: (id) => resolver.import(id),
+    dotenv: options.envFile ? { cwd, fileName: options.envFile } : true
   });
   const configDir = configFile ? dirname(configFile) : cwd;
 
@@ -100,7 +109,7 @@ export async function startServer(
   );
 
   const resolvedConfig = await resolveMiddlewareHandlers(
-    config,
+    applyHealthOverrides(config, options),
     cwd,
     resolver,
     mode === "dev"
@@ -117,17 +126,33 @@ export async function startServer(
   });
 
   const url = listener.url;
-  bootLog({
-    version: process.env.MAYA_VERSION,
-    mode: mode === "dev" ? "Development" : "Production",
-    url
-  });
+  if (options.quiet) {
+    console.log(url);
+  } else {
+    bootLog({
+      version: process.env.MAYA_VERSION,
+      mode: mode === "dev" ? "Development" : "Production",
+      url
+    });
 
-  if (configFile) {
-    consola.info(`Loaded config: ${configFile}`);
+    if (configFile) {
+      consola.info(`Loaded config: ${configFile}`);
+    }
   }
 
   return { listener, config: resolvedConfig };
+}
+
+function applyHealthOverrides(config: MayaConfig, options: MayaServerOptions) {
+  if (options.healthDisabled) {
+    return { ...config, health: { enabled: false } };
+  }
+
+  if (options.healthPath) {
+    return { ...config, health: { enabled: true, path: options.healthPath } };
+  }
+
+  return config;
 }
 
 const command = defineCommand({

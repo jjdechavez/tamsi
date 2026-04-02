@@ -22,6 +22,7 @@ export interface BuildOptions {
   minify?: boolean;
   sourcemap?: boolean | "inline" | "external";
   target?: string;
+  envFile?: string;
 }
 
 export async function buildProject(options: BuildOptions) {
@@ -33,7 +34,8 @@ export async function buildProject(options: BuildOptions) {
   const { config, configFile: resolvedConfigFile } = await loadMayaConfig({
     cwd,
     configFile,
-    import: (id) => resolver.import(id)
+    import: (id) => resolver.import(id),
+    dotenv: options.envFile ? { cwd, fileName: options.envFile } : true
   });
 
   if (!resolvedConfigFile) {
@@ -86,16 +88,28 @@ function renderServerEntry() {
   return `import { createMayaApp, createShutdownHooks, runBeforeClose, bootLog } from "maya";
 import { listen } from "listhen";
 import { toNodeHandler } from "h3/node";
+import { setupDotenv } from "c12";
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import config from "./maya.config.mjs";
 
 const baseDir = dirname(fileURLToPath(import.meta.url));
+const envFile = process.env.MAYA_ENV_FILE;
+await setupDotenv({ cwd: process.cwd(), fileName: envFile || ".env" });
+
+const { default: config } = await import("./maya.config.mjs");
+
 const envPort = process.env.PORT ? Number(process.env.PORT) : undefined;
 const port = Number.isFinite(envPort) ? envPort : (config.port ?? 3000);
 const host = process.env.HOST ?? "localhost";
 
-const app = createMayaApp(config, { baseDir });
+const runtimeConfig = { ...config };
+if (process.env.MAYA_NO_HEALTH === "1") {
+  runtimeConfig.health = { enabled: false };
+} else if (process.env.MAYA_HEALTH_PATH) {
+  runtimeConfig.health = { enabled: true, path: process.env.MAYA_HEALTH_PATH };
+}
+
+const app = createMayaApp(runtimeConfig, { baseDir });
 const listener = await listen(toNodeHandler(app), {
   port,
   hostname: host,
@@ -105,19 +119,23 @@ const listener = await listen(toNodeHandler(app), {
   autoClose: false
 });
 
-bootLog({
-  version: process.env.MAYA_VERSION,
-  mode: "Production",
-  url: listener.url
-});
+if (process.env.MAYA_QUIET === "1") {
+  console.log(listener.url);
+} else {
+  bootLog({
+    version: process.env.MAYA_VERSION,
+    mode: "Production",
+    url: listener.url
+  });
+}
 
 let shuttingDown = false;
 const shutdown = async () => {
   if (shuttingDown) return;
   shuttingDown = true;
 
-  const hooks = createShutdownHooks(config ?? {});
-  const timeoutMs = config.shutdownTimeoutMs ?? 10000;
+  const hooks = createShutdownHooks(runtimeConfig ?? {});
+  const timeoutMs = runtimeConfig.shutdownTimeoutMs ?? 10000;
   await runBeforeClose(hooks, {
     timeoutMs,
     onTimeout: () => {

@@ -1,4 +1,5 @@
 import { defineCommand } from "citty";
+import consola from "consola";
 import { access } from "node:fs/promises";
 import { spawn } from "node:child_process";
 import { resolve } from "node:path";
@@ -22,6 +23,24 @@ export default defineCommand(
         type: "string",
         description: "Build output directory",
         default: "dist"
+      },
+      env: {
+        type: "string",
+        description: "Path to env file (replaces default .env)"
+      },
+      quiet: {
+        type: "boolean",
+        description: "Reduce output to only the URL",
+        default: false
+      },
+      health: {
+        type: "string",
+        description: "Override health endpoint path"
+      },
+      noHealth: {
+        type: "boolean",
+        description: "Disable health endpoint",
+        default: false
       }
     },
     run: async ({ args }) => {
@@ -41,6 +60,18 @@ export default defineCommand(
       }
       if (typeof args.host === "string") {
         env.HOST = args.host;
+      }
+      if (typeof args.env === "string") {
+        env.MAYA_ENV_FILE = args.env;
+      }
+      if (args.quiet) {
+        env.MAYA_QUIET = "1";
+      }
+      if (typeof args.health === "string") {
+        env.MAYA_HEALTH_PATH = args.health;
+      }
+      if (args.noHealth) {
+        env.MAYA_NO_HEALTH = "1";
       }
 
       const child = spawn(process.execPath, [serverPath], {

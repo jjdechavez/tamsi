@@ -189,6 +189,7 @@ Optional flags:
 - `--sourcemap=true|inline|external`
 - `--target=node20|node22|node24`
 - `--clean`
+- `--env .env.production`
 
 Start from the compiled output:
 
@@ -200,3 +201,10 @@ Notes:
 
 - `maya start` requires `dist/server.mjs`.
 - Use `--clean` with `maya build` to remove the output directory before building.
+
+Start flags:
+
+- `--env .env.production` (replaces default `.env`)
+- `--quiet`
+- `--health /healthz`
+- `--no-health`

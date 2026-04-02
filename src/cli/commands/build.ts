@@ -34,8 +34,12 @@ export default defineCommand({
     },
     target: {
       type: "string",
-      description: "Node target for esbuild (e.g. node20, node22, node24)",
-      default: "node24"
+      description: "Node target for esbuild (e.g. node18, node20)",
+      default: "node18"
+    },
+    env: {
+      type: "string",
+      description: "Path to env file (replaces default .env)"
     }
   },
   run: async ({ args }) => {
@@ -47,7 +51,8 @@ export default defineCommand({
       clean: Boolean(args.clean),
       minify: Boolean(args.minify),
       sourcemap,
-      target: typeof args.target === "string" ? args.target : "node18"
+      target: typeof args.target === "string" ? args.target : "node18",
+      envFile: typeof args.env === "string" ? args.env : undefined
     });
 
     consola.success(`Built Maya app at ${result.outDir}`);

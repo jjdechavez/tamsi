@@ -25,6 +25,24 @@ export default defineCommand(
       config: {
         type: "string",
         description: "Path to maya config file"
+      },
+      env: {
+        type: "string",
+        description: "Path to env file (replaces default .env)"
+      },
+      quiet: {
+        type: "boolean",
+        description: "Reduce output to only the URL",
+        default: false
+      },
+      health: {
+        type: "string",
+        description: "Override health endpoint path"
+      },
+      noHealth: {
+        type: "boolean",
+        description: "Disable health endpoint",
+        default: false
       }
     },
     run: async ({ args }) => {
@@ -42,7 +60,12 @@ export default defineCommand(
       }
 
       async function start() {
-        const result = await startServer(args, "dev");
+        const result = await startServer(args, "dev", {
+          envFile: typeof args.env === "string" ? args.env : undefined,
+          quiet: Boolean(args.quiet),
+          healthPath: typeof args.health === "string" ? args.health : undefined,
+          healthDisabled: Boolean(args.noHealth)
+        });
         listener = result.listener;
         config = result.config;
       }
@@ -57,7 +80,9 @@ export default defineCommand(
         try {
           await stop();
           await start();
-          consola.success("Maya restarted.");
+          if (!args.quiet) {
+            consola.success("Maya restarted.");
+          }
         } finally {
           restarting = false;
           if (pendingRestart) {
@@ -101,7 +126,9 @@ export default defineCommand(
         shuttingDown = true;
         const hooks = createShutdownHooks(config ?? {});
         const timeoutMs = config?.shutdownTimeoutMs ?? 10000;
-        consola.info("🪶 Maya is landing... running shutdown hooks.");
+        if (!args.quiet) {
+          consola.info("🪶 Maya is landing... running shutdown hooks.");
+        }
         await runBeforeClose(hooks, {
           timeoutMs,
           onTimeout: () => {
@@ -111,7 +138,9 @@ export default defineCommand(
 
         await watcher.close();
         await stop();
-        consola.info("🌿 Maya shutdown complete.");
+        if (!args.quiet) {
+          consola.info("🌿 Maya shutdown complete.");
+        }
         process.exit(0);
       };
 
