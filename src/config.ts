@@ -2,37 +2,37 @@ import type { EventHandler, Middleware, HTTPMethod } from "h3";
 
 export type Awaitable<T> = T | Promise<T>;
 
-export interface MayaMiddleware {
+export interface TamsiMiddleware {
   path?: string;
   handler: EventHandler | Middleware | string;
 }
 
-export type MayaRouteMethod = HTTPMethod | Lowercase<HTTPMethod> | "ALL";
+export type TamsiRouteMethod = HTTPMethod | Lowercase<HTTPMethod> | "ALL";
 
-export interface MayaRoute {
-  method?: MayaRouteMethod;
+export interface TamsiRoute {
+  method?: TamsiRouteMethod;
   path: string;
   handler: EventHandler;
   middleware?: Middleware[];
 }
 
-export interface MayaHealthOptions {
+export interface TamsiHealthOptions {
   enabled?: boolean;
   path?: string;
 }
 
-export interface MayaConfig {
+export interface TamsiConfig {
   port?: number;
   routesBasePath?: string;
   publicDir?: string | false;
   publicPath?: string;
-  health?: MayaHealthOptions;
+  health?: TamsiHealthOptions;
   shutdownTimeoutMs?: number;
   onBeforeClose?: () => Awaitable<void>;
-  middleware?: MayaMiddleware[];
-  routes?: MayaRoute[];
+  middleware?: TamsiMiddleware[];
+  routes?: TamsiRoute[];
 }
 
-export function defineMayaConfig<T extends MayaConfig>(config: T): T {
+export function defineTamsiConfig<T extends TamsiConfig>(config: T): T {
   return config;
 }

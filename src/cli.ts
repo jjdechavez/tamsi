@@ -7,9 +7,9 @@ import { toNodeHandler, type EventHandler } from "h3";
 import { resolve, dirname } from "node:path";
 import {
   bootLog,
-  createMayaApp,
-  loadMayaConfig,
-  type MayaConfig
+  createTamsiApp,
+  loadTamsiConfig,
+  type TamsiConfig
 } from "./index.js";
 import { resolveServerOptions } from "./cli/resolve.js";
 
@@ -23,11 +23,11 @@ function createResolver(cwd: string, moduleCache: boolean) {
 }
 
 async function resolveMiddlewareHandlers(
-  config: MayaConfig,
+  config: TamsiConfig,
   cwd: string,
   resolver: ReturnType<typeof createResolver>,
   allowTs: boolean
-): Promise<MayaConfig> {
+): Promise<TamsiConfig> {
   if (!config.middleware?.length) {
     return config;
   }
@@ -43,7 +43,7 @@ async function resolveMiddlewareHandlers(
         const ext = resolvedPath.slice(resolvedPath.lastIndexOf("."));
         if (ext && !defaultStartExtensions.has(ext)) {
           throw new Error(
-            `Maya start only supports built middleware. Found ${item.handler}. Use maya dev or build first.`
+            `Tamsi start only supports built middleware. Found ${item.handler}. Use tamsi dev or build first.`
           );
         }
       }
@@ -69,13 +69,13 @@ async function resolveMiddlewareHandlers(
   };
 }
 
-type MayaServerStartupArgs = {
+type TamsiServerStartupArgs = {
   config?: string
   port?: string
   host?: string
 }
 
-type MayaServerOptions = {
+type TamsiServerOptions = {
   envFile?: string
   quiet?: boolean
   healthPath?: string
@@ -83,15 +83,15 @@ type MayaServerOptions = {
 }
 
 export async function startServer(
-  args: MayaServerStartupArgs,
+  args: TamsiServerStartupArgs,
   mode: "dev" | "production",
-  options: MayaServerOptions = {}
-): Promise<{ listener: Listener; config: MayaConfig }> {
+  options: TamsiServerOptions = {}
+): Promise<{ listener: Listener; config: TamsiConfig }> {
   const cwd = process.cwd();
   const moduleCache = mode === "production";
   const resolver = createResolver(cwd, moduleCache);
 
-  const { config, configFile } = await loadMayaConfig({
+  const { config, configFile } = await loadTamsiConfig({
     cwd,
     configFile: typeof args.config === "string" ? args.config : undefined,
     import: (id) => resolver.import(id),
@@ -115,12 +115,12 @@ export async function startServer(
     mode === "dev"
   );
 
-  const app = createMayaApp(resolvedConfig, { baseDir: configDir });
+  const app = createTamsiApp(resolvedConfig, { baseDir: configDir });
   const listener = await listen(toNodeHandler(app), {
     port,
     hostname: host,
     showURL: false,
-    name: "Maya",
+    name: "Tamsi",
     isProd: mode === "production",
     autoClose: false
   });
@@ -130,7 +130,7 @@ export async function startServer(
     console.log(url);
   } else {
     bootLog({
-      version: process.env.MAYA_VERSION,
+      version: process.env.TAMSI_VERSION,
       mode: mode === "dev" ? "Development" : "Production",
       url
     });
@@ -143,7 +143,7 @@ export async function startServer(
   return { listener, config: resolvedConfig };
 }
 
-function applyHealthOverrides(config: MayaConfig, options: MayaServerOptions) {
+function applyHealthOverrides(config: TamsiConfig, options: TamsiServerOptions) {
   if (options.healthDisabled) {
     return { ...config, health: { enabled: false } };
   }
@@ -157,8 +157,8 @@ function applyHealthOverrides(config: MayaConfig, options: MayaServerOptions) {
 
 const command = defineCommand({
   meta: {
-    name: "maya",
-    description: "Maya CLI"
+    name: "tamsi",
+    description: "Tamsi CLI"
   },
   subCommands: {
     init: import("./cli/commands/init.js").then(r => r.default),

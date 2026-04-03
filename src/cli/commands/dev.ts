@@ -5,13 +5,13 @@ import { dirname, resolve } from "node:path";
 import chokidar from "chokidar";
 
 import { startServer } from "../../cli.js";
-import { type MayaConfig, createShutdownHooks, runBeforeClose } from "../../index.js";
+import { type TamsiConfig, createShutdownHooks, runBeforeClose } from "../../index.js";
 
 export default defineCommand(
   {
     meta: {
       name: "dev",
-      description: "Start Maya in development mode"
+      description: "Start Tamsi in development mode"
     },
     args: {
       port: {
@@ -24,7 +24,7 @@ export default defineCommand(
       },
       config: {
         type: "string",
-        description: "Path to maya config file"
+        description: "Path to tamsi config file"
       },
       env: {
         type: "string",
@@ -47,7 +47,7 @@ export default defineCommand(
     },
     run: async ({ args }) => {
       let listener: Listener | undefined;
-      let config: MayaConfig | undefined;
+      let config: TamsiConfig | undefined;
       let restarting = false;
       let pendingRestart = false;
       let shuttingDown = false;
@@ -81,7 +81,7 @@ export default defineCommand(
           await stop();
           await start();
           if (!args.quiet) {
-            consola.success("Maya restarted.");
+            consola.success("Tamsi restarted.");
           }
         } finally {
           restarting = false;
@@ -98,9 +98,9 @@ export default defineCommand(
       const configArgs = typeof args.config === "string" ? args.config : undefined;
 
       let watchTargets: string[] = [
-        resolve(cwd, "maya.config.ts"),
-        resolve(cwd, "maya.config.mts"),
-        resolve(cwd, "maya.config.cts"),
+        resolve(cwd, "tamsi.config.ts"),
+        resolve(cwd, "tamsi.config.mts"),
+        resolve(cwd, "tamsi.config.cts"),
         resolve(cwd, "routes")
       ];
 
@@ -127,7 +127,7 @@ export default defineCommand(
         const hooks = createShutdownHooks(config ?? {});
         const timeoutMs = config?.shutdownTimeoutMs ?? 10000;
         if (!args.quiet) {
-          consola.info("🪶 Maya is landing... running shutdown hooks.");
+          consola.info("🪶 Tamsi is landing... running shutdown hooks.");
         }
         await runBeforeClose(hooks, {
           timeoutMs,
@@ -139,7 +139,7 @@ export default defineCommand(
         await watcher.close();
         await stop();
         if (!args.quiet) {
-          consola.info("🌿 Maya shutdown complete.");
+          consola.info("🌿 Tamsi shutdown complete.");
         }
         process.exit(0);
       };

@@ -1,9 +1,9 @@
-import type { MayaConfig } from "../config.js";
+import type { TamsiConfig } from "../config.js";
 
 const redactionKeys = /key|secret|token|password|pwd|auth|bearer|clientsecret|clientkey|apikey|apisecret|database|dsn|connection/i;
 
-export function applyConfigDefaults(config: MayaConfig): MayaConfig {
-  const next: MayaConfig = {
+export function applyConfigDefaults(config: TamsiConfig): TamsiConfig {
+  const next: TamsiConfig = {
     ...config
   };
 

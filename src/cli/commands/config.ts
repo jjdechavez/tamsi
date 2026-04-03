@@ -1,16 +1,16 @@
 import { defineCommand } from "citty";
-import { loadMayaConfig } from "../../loader.js";
+import { loadTamsiConfig } from "../../loader.js";
 import { applyConfigDefaults, redactConfig } from "../config-utils.js";
 
 export default defineCommand({
   meta: {
     name: "config",
-    description: "Print resolved Maya config"
+    description: "Print resolved Tamsi config"
   },
   args: {
     config: {
       type: "string",
-      description: "Path to maya config file"
+      description: "Path to tamsi config file"
     },
     env: {
       type: "string",
@@ -29,7 +29,7 @@ export default defineCommand({
   },
   run: async ({ args }) => {
     const cwd = process.cwd();
-    const { config, configFile } = await loadMayaConfig({
+    const { config, configFile } = await loadTamsiConfig({
       cwd,
       configFile: typeof args.config === "string" ? args.config : undefined,
       dotenv: typeof args.env === "string" ? { cwd, fileName: args.env } : true

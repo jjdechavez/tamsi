@@ -1,7 +1,7 @@
-import { defineMayaConfig } from "maya";
+import { defineTamsiConfig } from "tamsi";
 import handler from "./routes/index";
 
-export default defineMayaConfig({
+export default defineTamsiConfig({
   port: __PORT__,
   publicDir: "public",
   publicPath: "/public",

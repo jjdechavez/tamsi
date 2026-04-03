@@ -1,24 +1,24 @@
 import { loadConfig, type DotenvOptions } from "c12";
-import type { MayaConfig } from "./config.js";
+import type { TamsiConfig } from "./config.js";
 
-export interface LoadMayaConfigOptions {
+export interface LoadTamsiConfigOptions {
   cwd?: string;
   configFile?: string;
   import?: (id: string) => Promise<unknown>;
   dotenv?: boolean | DotenvOptions;
 }
 
-export interface LoadedMayaConfig {
-  config: MayaConfig;
+export interface LoadedTamsiConfig {
+  config: TamsiConfig;
   configFile?: string;
 }
 
-export async function loadMayaConfig(
-  options: LoadMayaConfigOptions = {}
-): Promise<LoadedMayaConfig> {
+export async function loadTamsiConfig(
+  options: LoadTamsiConfigOptions = {}
+): Promise<LoadedTamsiConfig> {
   const { cwd, configFile, import: importModule, dotenv } = options;
-  const result = await loadConfig<MayaConfig>({
-    name: "maya",
+  const result = await loadConfig<TamsiConfig>({
+    name: "tamsi",
     cwd,
     configFile,
     dotenv: dotenv ?? true,

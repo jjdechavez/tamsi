@@ -11,8 +11,8 @@ import {
 } from "node:fs/promises";
 import { dirname, join, resolve, isAbsolute } from "node:path";
 import consola from "consola";
-import type { MayaConfig } from "../config.js";
-import { loadMayaConfig } from "../loader.js";
+import type { TamsiConfig } from "../config.js";
+import { loadTamsiConfig } from "../loader.js";
 
 export interface BuildOptions {
   cwd: string;
@@ -31,7 +31,7 @@ export async function buildProject(options: BuildOptions) {
     interopDefault: true,
     moduleCache: false
   });
-  const { config, configFile: resolvedConfigFile } = await loadMayaConfig({
+  const { config, configFile: resolvedConfigFile } = await loadTamsiConfig({
     cwd,
     configFile,
     import: (id) => resolver.import(id),
@@ -39,7 +39,7 @@ export async function buildProject(options: BuildOptions) {
   });
 
   if (!resolvedConfigFile) {
-    throw new Error("maya.config.ts not found.");
+    throw new Error("tamsi.config.ts not found.");
   }
 
   const configDir = dirname(resolvedConfigFile);
@@ -53,7 +53,7 @@ export async function buildProject(options: BuildOptions) {
 
   await build({
     entryPoints: {
-      "maya.config": resolvedConfigFile
+      "tamsi.config": resolvedConfigFile
     },
     outdir: resolvedOutDir,
     bundle: true,
@@ -85,7 +85,7 @@ export async function buildProject(options: BuildOptions) {
 }
 
 function renderServerEntry() {
-  return `import { createMayaApp, createShutdownHooks, runBeforeClose, bootLog } from "maya";
+  return `import { createTamsiApp, createShutdownHooks, runBeforeClose, bootLog } from "tamsi";
 import { listen } from "listhen";
 import { toNodeHandler } from "h3/node";
 import { setupDotenv } from "c12";
@@ -93,37 +93,37 @@ import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const baseDir = dirname(fileURLToPath(import.meta.url));
-const envFile = process.env.MAYA_ENV_FILE;
+const envFile = process.env.tamsi_ENV_FILE;
 await setupDotenv({ cwd: process.cwd(), fileName: envFile || ".env" });
 
-const { default: config } = await import("./maya.config.mjs");
+const { default: config } = await import("./tamsi.config.mjs");
 
 const envPort = process.env.PORT ? Number(process.env.PORT) : undefined;
 const port = Number.isFinite(envPort) ? envPort : (config.port ?? 3000);
 const host = process.env.HOST ?? "localhost";
 
 const runtimeConfig = { ...config };
-if (process.env.MAYA_NO_HEALTH === "1") {
+if (process.env.tamsi_NO_HEALTH === "1") {
   runtimeConfig.health = { enabled: false };
-} else if (process.env.MAYA_HEALTH_PATH) {
-  runtimeConfig.health = { enabled: true, path: process.env.MAYA_HEALTH_PATH };
+} else if (process.env.tamsi_HEALTH_PATH) {
+  runtimeConfig.health = { enabled: true, path: process.env.tamsi_HEALTH_PATH };
 }
 
-const app = createMayaApp(runtimeConfig, { baseDir });
+const app = createTamsiApp(runtimeConfig, { baseDir });
 const listener = await listen(toNodeHandler(app), {
   port,
   hostname: host,
   showURL: false,
-  name: "Maya",
+  name: "Tamsi",
   isProd: true,
   autoClose: false
 });
 
-if (process.env.MAYA_QUIET === "1") {
+if (process.env.tamsi_QUIET === "1") {
   console.log(listener.url);
 } else {
   bootLog({
-    version: process.env.MAYA_VERSION,
+    version: process.env.tamsi_VERSION,
     mode: "Production",
     url: listener.url
   });
@@ -155,7 +155,7 @@ process.on("SIGTERM", shutdown);
 }
 
 async function copyPublicAssets(
-  config: MayaConfig,
+  config: TamsiConfig,
   configDir: string,
   outDir: string
 ) {
@@ -182,14 +182,14 @@ async function copyPublicAssets(
 
 async function validateBuildOutputs(outDir: string) {
   const serverPath = resolve(outDir, "server.mjs");
-  const configPath = resolve(outDir, "maya.config.mjs");
+  const configPath = resolve(outDir, "tamsi.config.mjs");
 
   try {
     await access(serverPath);
     await access(configPath);
   } catch {
     consola.error(
-      `Build incomplete. Expected ${serverPath} and ${configPath}. Run "maya build --clean".`
+      `Build incomplete. Expected ${serverPath} and ${configPath}. Run "tamsi build --clean".`
     );
     throw new Error("Build incomplete.");
   }

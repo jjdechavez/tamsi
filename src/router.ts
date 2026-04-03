@@ -1,10 +1,10 @@
-import type { MayaRoute } from "./config.js";
+import type { TamsiRoute } from "./config.js";
 import type { Middleware } from "h3";
 
-export interface MayaRouterInput {
+export interface TamsiRouterInput {
   basePath?: string;
   middleware?: Middleware[];
-  routes: MayaRoute[];
+  routes: TamsiRoute[];
 }
 
 function normalizePath(basePath: string | undefined, path: string) {
@@ -17,11 +17,11 @@ function normalizePath(basePath: string | undefined, path: string) {
   return `${base}${tail}`;
 }
 
-export function defineMayaRouter(routes: MayaRoute[]): MayaRoute[];
-export function defineMayaRouter(input: MayaRouterInput): MayaRoute[];
-export function defineMayaRouter(
-  input: MayaRoute[] | MayaRouterInput
-): MayaRoute[] {
+export function defineTamsiRouter(routes: TamsiRoute[]): TamsiRoute[];
+export function defineTamsiRouter(input: TamsiRouterInput): TamsiRoute[];
+export function defineTamsiRouter(
+  input: TamsiRoute[] | TamsiRouterInput
+): TamsiRoute[] {
   if (Array.isArray(input)) {
     return input;
   }

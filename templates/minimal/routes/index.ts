@@ -1,6 +1,6 @@
-import { defineEventHandler } from "h3";
+import { defineHandler } from "h3";
 
-export default defineEventHandler(() => ({
+export default defineHandler(() => ({
   ok: true,
-  message: "Maya is flying."
+  message: "Tamsi is flying."
 }));

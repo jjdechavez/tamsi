@@ -8,7 +8,7 @@ export default defineCommand(
   {
     meta: {
       name: "start",
-      description: "Start Maya in production mode"
+      description: "Start Tamsi in production mode"
     },
     args: {
       port: {
@@ -50,7 +50,7 @@ export default defineCommand(
       try {
         await access(serverPath);
       } catch {
-        consola.error(`Build output not found at ${serverPath}. Run "maya build".`);
+        consola.error(`Build output not found at ${serverPath}. Run "tamsi build".`);
         throw new Error("Missing build output.");
       }
 
@@ -62,16 +62,16 @@ export default defineCommand(
         env.HOST = args.host;
       }
       if (typeof args.env === "string") {
-        env.MAYA_ENV_FILE = args.env;
+        env.TAMSI_ENV_FILE = args.env;
       }
       if (args.quiet) {
-        env.MAYA_QUIET = "1";
+        env.TAMSI_QUIET = "1";
       }
       if (typeof args.health === "string") {
-        env.MAYA_HEALTH_PATH = args.health;
+        env.TAMSI_HEALTH_PATH = args.health;
       }
       if (args.noHealth) {
-        env.MAYA_NO_HEALTH = "1";
+        env.TAMSI_NO_HEALTH = "1";
       }
 
       const child = spawn(process.execPath, [serverPath], {

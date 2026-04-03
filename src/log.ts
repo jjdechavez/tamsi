@@ -7,7 +7,7 @@ export interface BootLogOptions {
 }
 
 export function bootLog({ version, mode, url }: BootLogOptions) {
-  const title = version ? `Maya v${version}` : "Maya";
+  const title = version ? `Tamsi v${version}` : "Tamsi";
   const lines = [
     "🪶 Status: Flight ready.",
     url ? `🔗 URL: ${url}` : undefined,

@@ -8,7 +8,7 @@ const defaultPort = 5555;
 export default defineCommand({
   meta: {
     name: "init",
-    description: "Create a new Maya project"
+    description: "Create a new Tamsi project"
   },
   args: {
     name: {
@@ -48,9 +48,9 @@ export default defineCommand({
       port: defaultPort
     });
 
-    consola.success(`Created Maya project at ${targetDir}`);
+    consola.success(`Created Tamsi project at ${targetDir}`);
     consola.info(`Next: cd ${args.name} && pnpm install`);
-    consola.info("Then: pnpm run maya dev");
+    consola.info("Then: pnpm run tamsi dev");
     consola.info("Tip: set node-linker=isolated in .npmrc for workspace:* linking.");
   }
 });

@@ -8,12 +8,12 @@ import {
 } from "h3";
 import { readFile, stat } from "node:fs/promises";
 import { isAbsolute, resolve } from "node:path";
-import type { MayaConfig, MayaRouteMethod } from "./config.js";
+import type { TamsiConfig, TamsiRouteMethod } from "./config.js";
 
 function resolveMiddleware(handler: EventHandler | Middleware | string): Middleware {
   if (typeof handler === "string") {
     throw new TypeError(
-      `Maya middleware handler must be an EventHandler, received string: ${handler}`
+      `Tamsi middleware handler must be an EventHandler, received string: ${handler}`
     );
   }
 
@@ -29,8 +29,8 @@ function resolveMiddleware(handler: EventHandler | Middleware | string): Middlew
   return middleware;
 }
 
-export function createMayaApp(
-  config: MayaConfig,
+export function createTamsiApp(
+  config: TamsiConfig,
   options: { baseDir?: string } = {}
 ): H3 {
   const app = new H3();
@@ -84,7 +84,7 @@ export function createMayaApp(
 
 function registerRoute(
   app: H3,
-  method: MayaRouteMethod,
+  method: TamsiRouteMethod,
   path: string,
   handler: EventHandler,
   options?: { middleware?: Middleware[] }

@@ -3,12 +3,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "maya dev",
+    "dev": "tamsi dev",
     "assets:build": "echo \"Add your asset build here\"",
-    "build": "maya build",
-    "start": "maya start"
+    "build": "tamsi build",
+    "start": "tamsi start"
   },
   "dependencies": {
-    "maya": "workspace:*"
+    "tamsi": "workspace:*"
   }
 }

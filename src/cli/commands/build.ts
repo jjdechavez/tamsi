@@ -5,12 +5,12 @@ import { buildProject } from "../build.js";
 export default defineCommand({
   meta: {
     name: "build",
-    description: "Build Maya app for production"
+    description: "Build Tamsi app for production"
   },
   args: {
     config: {
       type: "string",
-      description: "Path to maya config file"
+      description: "Path to tamsi config file"
     },
     outDir: {
       type: "string",
@@ -55,7 +55,7 @@ export default defineCommand({
       envFile: typeof args.env === "string" ? args.env : undefined
     });
 
-    consola.success(`Built Maya app at ${result.outDir}`);
+    consola.success(`Built Tamsi app at ${result.outDir}`);
   }
 });
 

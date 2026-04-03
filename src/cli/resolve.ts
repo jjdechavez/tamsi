@@ -1,4 +1,4 @@
-import type { MayaConfig } from "../config.js";
+import type { TamsiConfig } from "../config.js";
 
 export interface ServerArgs {
   port?: string;
@@ -27,7 +27,7 @@ function parsePort(value?: string): number | undefined {
 
 export function resolveServerOptions(
   args: ServerArgs,
-  config: MayaConfig
+  config: TamsiConfig
 ): ResolvedServerOptions {
   const port = parsePort(args.port) ?? config.port ?? 3000;
   const host = args.host ?? "localhost";

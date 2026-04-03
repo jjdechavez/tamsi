@@ -1,5 +1,5 @@
 import { createHooks } from "hookable";
-import type { MayaConfig } from "./config.js";
+import type { TamsiConfig } from "./config.js";
 
 export interface ShutdownHooks {
   beforeClose: () => Promise<void> | void;
@@ -10,7 +10,7 @@ export interface ShutdownOptions {
   onTimeout?: () => void;
 }
 
-export function createShutdownHooks(config: MayaConfig) {
+export function createShutdownHooks(config: TamsiConfig) {
   const hooks = createHooks<ShutdownHooks>();
 
   if (config.onBeforeClose) {

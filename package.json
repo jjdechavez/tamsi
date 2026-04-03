@@ -1,6 +1,6 @@
 {
-  "name": "maya",
-  "version": "1.0.0",
+  "name": "tamsi",
+  "version": "0.0.1",
   "description": "",
   "type": "module",
   "main": "./dist/index.mjs",
@@ -12,7 +12,7 @@
     }
   },
   "bin": {
-    "maya": "./dist/cli.mjs"
+    "tamsi": "./dist/cli.mjs"
   },
   "files": [
     "dist",
@@ -20,12 +20,15 @@
   ],
   "scripts": {
     "build": "unbuild",
-    "maya": "node dist/cli.mjs",
+    "tamsi": "node dist/cli.mjs",
     "test": "vitest run"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "h3",
+    "router"
+  ],
+  "author": "John Jerald De Chavez",
+  "license": "MIT",
   "dependencies": {
     "c12": "4.0.0-beta.4",
     "chokidar": "^5.0.0",
