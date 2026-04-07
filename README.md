@@ -17,10 +17,17 @@ export default defineTamsiConfig({
   port: 5555,
   routesBasePath: "/api",
   routes: [
-    { method: "GET", path: "/hello", handler: hello }
+    {
+      method: "GET",
+      path: "/hello",
+      handler: hello,
+      middleware: [defineEventHandler(() => console.log("Middleware before '/' endpoint."))]
+    }
   ],
-  publicDir: "public",
-  publicPath: "/public",
+  serveStatic: {
+    publicDir: "public",
+    publicPath: "/public",
+  },
   health: { enabled: true, path: "/health" },
   shutdownTimeoutMs: 10000,
   onBeforeClose() {
@@ -41,9 +48,9 @@ export default defineTamsiConfig({
   Prefix added to all routes (e.g. `"/api"`).
 - `middlewares: TamsiMiddleware[]` (default `[]`)
   Global middleware applied to all requests.
-- `publicDir: string | false` (default `false`)
+- `serveStatic.publicDir: string | false` (default `false`)
   Directory of static assets to serve. Disabled when `false` or unset.
-- `publicPath: string` (default `"/public"`)
+- `serveStatic.publicPath: string` (default `"/public"`)
   URL prefix for static assets.
 - `health: { enabled?: boolean; path?: string }` (default enabled, path `"/health"`)
   Built-in health endpoint.
@@ -82,8 +89,10 @@ export default defineTamsiConfig({
 
 // Static-only
 export default defineTamsiConfig({
-  publicDir: "public",
-  publicPath: "/public",
+  serverStatic: {
+    publicDir: "public",
+    publicPath: "/public",
+  },
   health: { enabled: false }
 });
 ```
@@ -134,14 +143,16 @@ You can also set a global prefix with `routesBasePath`.
 
 ### Static files (optional)
 
-Static serving is disabled by default. Enable it by setting `publicDir`.
+Static serving is disabled by default. Enable it by setting `serveStatic.publicDir`.
 
 ```ts
 import { defineTamsiConfig } from "tamsi";
 
 export default defineTamsiConfig({
-  publicDir: "public",
-  publicPath: "/public"
+  serveStatic: {
+    publicDir: "public",
+    publicPath: "/public"
+  }
 });
 ```
 
