@@ -45,12 +45,22 @@ export function createTamsiApp(
     const publicDir = isAbsolute(config.publicDir)
       ? config.publicDir
       : resolve(options.baseDir ?? process.cwd(), config.publicDir);
-    const handler = withBase(publicPath, (event) =>
-      serveStatic(event, {
-        getMeta: async (id) => resolveStaticMeta(publicDir, id),
-        getContents: async (id) => resolveStaticContents(publicDir, id)
-      })
-    );
+    const handler = withBase(publicPath, async (event) => {
+      const id = mapStaticId(event.url.pathname);
+      const meta = await resolveStaticMeta(publicDir, id);
+      if (!meta) {
+        return;
+      }
+
+      return serveStatic(event, {
+        getMeta: async (requestId) => resolveStaticMeta(publicDir, mapStaticId(requestId)),
+        getContents: async (requestId) =>
+          resolveStaticContents(publicDir, mapStaticId(requestId))
+      });
+    });
+
+    app.get(publicPath, handler);
+
     const matchPath = publicPath.endsWith("/")
       ? `${publicPath}**`
       : `${publicPath}/**`;
@@ -114,6 +124,15 @@ function resolveStaticPath(dir: string, id: string) {
     return undefined;
   }
   return resolved;
+}
+
+function normalizeStaticId(id: string) {
+  return id.startsWith("/") ? id : `/${id}`;
+}
+
+function mapStaticId(id: string) {
+  const normalized = normalizeStaticId(id);
+  return normalized === "/" ? "/index.html" : normalized;
 }
 
 async function resolveStaticMeta(dir: string, id: string) {

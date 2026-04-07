@@ -22,6 +22,7 @@ export interface TamsiHealthOptions {
 }
 
 export interface TamsiConfig {
+  host?: string;
   port?: number;
   routesBasePath?: string;
   publicDir?: string | false;
