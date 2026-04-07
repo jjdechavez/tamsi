@@ -76,7 +76,7 @@ export async function buildProject(options: BuildOptions) {
   );
 
   await validateBuildOutputs(resolvedOutDir);
-  await logBuildSummary(resolvedOutDir, Boolean(config.publicDir));
+  await logBuildSummary(resolvedOutDir, Boolean(config.serveStatic?.publicDir));
 
   return {
     outDir: resolvedOutDir,
@@ -159,13 +159,13 @@ async function copyPublicAssets(
   configDir: string,
   outDir: string
 ) {
-  if (!config.publicDir) {
+  if (!config.serveStatic?.publicDir) {
     return;
   }
 
-  const sourceDir = isAbsolute(config.publicDir)
-    ? config.publicDir
-    : resolve(configDir, config.publicDir);
+  const sourceDir = isAbsolute(config.serveStatic?.publicDir)
+    ? config.serveStatic.publicDir
+    : resolve(configDir, config.serveStatic.publicDir);
   const targetDir = resolve(outDir, "public");
 
   try {

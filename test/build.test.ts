@@ -10,7 +10,7 @@ describe("buildProject", () => {
     try {
       await writeFile(
         join(baseDir, "tamsi.config.ts"),
-        `export default {\n  port: 5555,\n  publicDir: "public"\n};\n`
+        `export default {\n  port: 5555,\n  serveStatic: {\n    publicDir: "public"\n  }\n};\n`
       );
       await mkdir(join(baseDir, "public"), { recursive: true });
       await writeFile(join(baseDir, "public/index.html"), "hello");
