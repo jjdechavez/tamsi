@@ -99,7 +99,7 @@ const { default: config } = await import("./tamsi.config.mjs");
 
 const envPort = process.env.PORT ? Number(process.env.PORT) : undefined;
 const port = Number.isFinite(envPort) ? envPort : (config.port ?? 3000);
-const host = process.env.HOST ?? "localhost";
+const host = process.env.HOST ?? "0.0.0.0";
 
 const runtimeConfig = { ...config };
 if (process.env.tamsi_NO_HEALTH === "1") {
