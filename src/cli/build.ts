@@ -86,8 +86,7 @@ export async function buildProject(options: BuildOptions) {
 
 function renderServerEntry() {
   return `import { createTamsiApp, createShutdownHooks, runBeforeClose, bootLog } from "tamsi";
-import { listen } from "listhen";
-import { toNodeHandler } from "h3/node";
+import { serve } from "h3";
 import { setupDotenv } from "c12";
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -110,13 +109,9 @@ if (process.env.tamsi_NO_HEALTH === "1") {
 }
 
 const app = createTamsiApp(runtimeConfig, { baseDir });
-const listener = await listen(toNodeHandler(app), {
+const listener = serve(app, {
   port,
   hostname: host,
-  showURL: false,
-  name: "Tamsi",
-  isProd: true,
-  autoClose: false
 });
 
 if (process.env.tamsi_QUIET === "1") {
