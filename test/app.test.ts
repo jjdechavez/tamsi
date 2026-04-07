@@ -3,9 +3,9 @@ import { defineEventHandler, defineMiddleware } from "h3";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createMayaApp } from "../src/app.js";
+import { createTamsiApp } from "../src/app.js";
 
-describe("createMayaApp", () => {
+describe("createTamsiApp", () => {
   it("registers middleware and routes", async () => {
     let middlewareCalled = false;
     const middleware = defineMiddleware(async (_event, next) => {
@@ -14,8 +14,8 @@ describe("createMayaApp", () => {
     });
     const route = defineEventHandler(() => ({ ok: true }));
 
-    const app = createMayaApp({
-      middleware: [{ handler: middleware }],
+    const app = createTamsiApp({
+      middlewares: [{ handler: middleware }],
       routes: [{ path: "/hello", handler: route }]
     });
 
@@ -26,13 +26,13 @@ describe("createMayaApp", () => {
   });
 
   it("adds health route by default", async () => {
-    const app = createMayaApp({});
+    const app = createTamsiApp({});
     const response = await app.fetch(new Request("http://localhost/health"));
     expect(response.status).toBe(200);
   });
 
   it("can disable health route", async () => {
-    const app = createMayaApp({ health: { enabled: false } });
+    const app = createTamsiApp({ health: { enabled: false } });
     const response = await app.fetch(new Request("http://localhost/health"));
     expect(response.status).toBe(404);
   });
@@ -41,9 +41,11 @@ describe("createMayaApp", () => {
     const tempDir = await mkdtemp(join(tmpdir(), "maya-static-"));
     try {
       await writeFile(join(tempDir, "hello.txt"), "hello");
-      const app = createMayaApp({
-        publicDir: tempDir,
-        publicPath: "/public"
+      const app = createTamsiApp({
+        serveStatic: {
+          publicDir: tempDir,
+          publicPath: "/public"
+        }
       });
       const response = await app.fetch(
         new Request("http://localhost/public/hello.txt")
@@ -56,7 +58,7 @@ describe("createMayaApp", () => {
   });
 
   it("applies routesBasePath", async () => {
-    const app = createMayaApp({
+    const app = createTamsiApp({
       routesBasePath: "/api",
       routes: [
         {
@@ -72,9 +74,9 @@ describe("createMayaApp", () => {
 
   it("throws when middleware handler is a string", () => {
     expect(() =>
-      createMayaApp({
-        middleware: [{ handler: "./middleware.ts" as unknown as never }]
+      createTamsiApp({
+        middlewares: [{ handler: "./middleware.ts" as unknown as never }]
       })
-    ).toThrow("Maya middleware handler must be an EventHandler");
+    ).toThrow("Tamsi middleware handler must be an EventHandler");
   });
 });

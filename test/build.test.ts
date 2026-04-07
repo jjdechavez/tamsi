@@ -6,10 +6,10 @@ import { buildProject } from "../src/cli/build.js";
 
 describe("buildProject", () => {
   it("emits server.mjs and copies public assets", async () => {
-    const baseDir = await mkdtemp(join(tmpdir(), "maya-build-"));
+    const baseDir = await mkdtemp(join(tmpdir(), "tamsi-build-"));
     try {
       await writeFile(
-        join(baseDir, "maya.config.ts"),
+        join(baseDir, "tamsi.config.ts"),
         `export default {\n  port: 5555,\n  publicDir: "public"\n};\n`
       );
       await mkdir(join(baseDir, "public"), { recursive: true });
@@ -22,7 +22,7 @@ describe("buildProject", () => {
       });
 
       await access(resolve(result.outDir, "server.mjs"));
-      await access(resolve(result.outDir, "maya.config.mjs"));
+      await access(resolve(result.outDir, "tamsi.config.mjs"));
       const html = await readFile(
         resolve(result.outDir, "public/index.html"),
         "utf8"

@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { defineEventHandler, defineMiddleware } from "h3";
-import { defineMayaRouter } from "../src/router.js";
+import { defineTamsiRouter } from "../src/router.js";
 
-describe("defineMayaRouter", () => {
+describe("defineTamsiRouter", () => {
   it("returns routes as-is for array input", () => {
     const routes = [
       {
@@ -11,14 +11,14 @@ describe("defineMayaRouter", () => {
       }
     ];
 
-    expect(defineMayaRouter(routes)).toBe(routes);
+    expect(defineTamsiRouter(routes)).toBe(routes);
   });
 
   it("applies basePath and group middleware", () => {
     const group = defineMiddleware(async (_event, next) => next());
     const routeMiddleware = defineMiddleware(async (_event, next) => next());
 
-    const routes = defineMayaRouter({
+    const routes = defineTamsiRouter({
       basePath: "/api",
       middleware: [group],
       routes: [

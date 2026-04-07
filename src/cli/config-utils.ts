@@ -11,8 +11,8 @@ export function applyConfigDefaults(config: TamsiConfig): TamsiConfig {
     next.port = 3000;
   }
 
-  if (next.publicDir && !next.publicPath) {
-    next.publicPath = "/public";
+  if (next.serveStatic?.publicDir && !next.serveStatic?.publicPath) {
+    next.serveStatic.publicPath = "/public";
   }
 
   if (!next.health) {

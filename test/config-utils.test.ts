@@ -9,9 +9,9 @@ describe("applyConfigDefaults", () => {
   });
 
   it("preserves existing config", () => {
-    const result = applyConfigDefaults({ port: 4444, publicDir: "public" });
+    const result = applyConfigDefaults({ port: 4444, serveStatic: { publicDir: "public" } });
     expect(result.port).toBe(4444);
-    expect(result.publicPath).toBe("/public");
+    expect(result.serveStatic?.publicPath).toBe("/public");
   });
 });
 

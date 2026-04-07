@@ -6,7 +6,7 @@ import { initProject } from "../src/cli/init.js";
 
 describe("initProject", () => {
   it("renders minimal template", async () => {
-    const baseDir = await mkdtemp(join(tmpdir(), "maya-init-"));
+    const baseDir = await mkdtemp(join(tmpdir(), "tamsi-init-"));
     try {
       const targetDir = await initProject({
         name: "my-api",
@@ -17,7 +17,7 @@ describe("initProject", () => {
       });
 
       const pkg = await readFile(join(targetDir, "package.json"), "utf8");
-      const config = await readFile(join(targetDir, "maya.config.ts"), "utf8");
+      const config = await readFile(join(targetDir, "tamsi.config.ts"), "utf8");
 
       expect(pkg).toContain("\"name\": \"my-api\"");
       expect(config).toContain("port: 5555");
