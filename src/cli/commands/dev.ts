@@ -6,6 +6,8 @@ import chokidar from "chokidar";
 
 import { startServer } from "../../cli.js";
 import { type TamsiConfig, createShutdownHooks, runBeforeClose } from "../../index.js";
+import { ServerHttp2Session } from "node:http2";
+import { serve } from "h3";
 
 export default defineCommand(
   {
@@ -46,7 +48,7 @@ export default defineCommand(
       }
     },
     run: async ({ args }) => {
-      let listener: Listener | undefined;
+      let listener: ReturnType<typeof serve> | undefined;
       let config: TamsiConfig | undefined;
       let restarting = false;
       let pendingRestart = false;
@@ -101,13 +103,13 @@ export default defineCommand(
         resolve(cwd, "tamsi.config.ts"),
         resolve(cwd, "tamsi.config.mts"),
         resolve(cwd, "tamsi.config.cts"),
-        resolve(cwd, "routes")
+        resolve(cwd, "src")
       ];
 
       if (configArgs) {
         const configFile = resolve(cwd, configArgs);
         const configDir = dirname(configFile);
-        watchTargets = [configFile, resolve(configDir, "routes")];
+        watchTargets = [configFile, resolve(configDir, "src")];
       }
 
       const watcher = chokidar.watch(watchTargets, {
