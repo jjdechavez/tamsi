@@ -30,6 +30,7 @@ Tamsi ships with a CLI for dev, build, and production start.
 
 ```sh
 tamsi init my-api --template minimal
+tamsi init my-api --template minimal --kysely --betterAuth
 tamsi dev --env .env.local
 tamsi build --outDir dist
 tamsi start --outDir dist
@@ -48,6 +49,9 @@ tamsi init my-api --template standard
 Flags:
 
 - `--template minimal|standard` (default `minimal`)
+- `--kysely` add Kysely setup (defaults to sqlite)
+- `--betterAuth` add Better Auth (email/password) and Kysely
+- `--db sqlite|postgres` database driver for Kysely
 - `--force` overwrite if directory is not empty
 - `--cwd <path>` base directory to create the project in
 
@@ -292,6 +296,7 @@ Create a new project:
 
 ```sh
 tamsi init my-api --template minimal
+tamsi init my-api --template minimal --kysely --betterAuth
 ```
 
 Templates:

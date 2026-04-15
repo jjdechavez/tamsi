@@ -24,7 +24,7 @@
     ]
   },
   "include": [
-    "routes",
+    "src",
     "h3.d.ts",
     "tamsi.config.ts"
   ]

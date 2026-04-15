@@ -1,0 +1,12 @@
+{
+  "dependencies": {
+    "kysely": "^0.27.4",
+    "better-sqlite3": "^9.5.0"
+  },
+  "env": [
+    "DATABASE_URL=\"file:./dev.db\""
+  ],
+  "scripts": {
+    "make:migration": "node scripts/make-migration.js"
+  }
+}
