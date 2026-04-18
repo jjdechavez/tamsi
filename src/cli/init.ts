@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 
 export type TemplateName = "minimal" | "standard";
 
-export interface InitOptions {
+interface InitOptions {
 	name: string;
 	template: TemplateName;
 	cwd: string;
