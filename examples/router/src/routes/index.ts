@@ -1,16 +1,15 @@
-import { defineTamsiRouter } from "tamsi"
-
-import ping from "./ping.ts"
-import hello from "./hello.ts"
+import { defineTamsiRouter } from "tamsi";
+import hello from "./hello.ts";
+import ping from "./ping.ts";
 
 export const apiRoutes = defineTamsiRouter({
-  basePath: "/api",
-  routes: [{ method: "GET", path: "/ping", handler: ping }]
+	basePath: "/api",
+	routes: [{ method: "GET", path: "/ping", handler: ping }],
 });
 
 export const publicRoutes = defineTamsiRouter({
-  basePath: "/",
-  routes: [{ method: "GET", path: "/hello", handler: hello }]
+	basePath: "/",
+	routes: [{ method: "GET", path: "/hello", handler: hello }],
 });
 
-export const routes = [...apiRoutes, publicRoutes]
+export const routes = [...apiRoutes, publicRoutes];

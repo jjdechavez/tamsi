@@ -1,6 +1,6 @@
-import { defineHandler } from "h3";
+import { defineHandler } from "tamsi";
 
 export default defineHandler(() => ({
-  ok: true,
-  message: "Static example ready"
+	ok: true,
+	message: "Static example ready",
 }));
