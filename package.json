@@ -1,6 +1,6 @@
 {
   "name": "tamsi",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "Lightweight micro-engine for explicit h3-based servers.",
   "type": "module",
   "main": "./dist/index.mjs",
@@ -14,19 +14,13 @@
   "bin": {
     "tamsi": "./dist/cli.mjs"
   },
-  "files": [
-    "dist",
-    "templates"
-  ],
+  "files": ["dist", "templates"],
   "scripts": {
     "build": "unbuild",
     "tamsi": "node dist/cli.mjs",
     "test": "vitest run"
   },
-  "keywords": [
-    "h3",
-    "router"
-  ],
+  "keywords": ["h3", "router"],
   "author": "John Jerald De Chavez",
   "license": "MIT",
   "dependencies": {
