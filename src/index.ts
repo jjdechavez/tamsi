@@ -5,6 +5,7 @@ export {
 	getQuery,
 	HTTPError,
 	readFormData,
+	readFormDataBody,
 	readValidatedBody,
 } from "h3";
 
