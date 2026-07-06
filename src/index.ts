@@ -1,13 +1,4 @@
-export type { EventHandler, H3Event, H3EventContext } from "h3";
-export {
-	createError,
-	defineHandler,
-	getQuery,
-	HTTPError,
-	readFormData,
-	readFormDataBody,
-	readValidatedBody,
-} from "h3";
+export * from "./h3.js";
 
 export * from "./app.js";
 export * from "./config.js";

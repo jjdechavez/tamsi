@@ -25,4 +25,29 @@ describe("initProject", () => {
 			await rm(baseDir, { recursive: true, force: true });
 		}
 	});
+
+	it("applies better-auth feature with catch-all auth route", async () => {
+		const baseDir = await mkdtemp(join(tmpdir(), "tamsi-init-"));
+		try {
+			const targetDir = await initProject({
+				name: "my-api",
+				template: "minimal",
+				cwd: baseDir,
+				force: false,
+				port: 5555,
+				features: {
+					kysely: false,
+					betterAuth: true,
+				},
+			});
+
+			const routes = await readFile(join(targetDir, "src/routes/index.ts"), "utf8");
+			const authRoute = await readFile(join(targetDir, "src/routes/auth.ts"), "utf8");
+
+			expect(routes).toContain('{ path: "/auth/**", handler: authHandler }');
+			expect(authRoute).toContain("getRequestURL(event).toString()");
+		} finally {
+			await rm(baseDir, { recursive: true, force: true });
+		}
+	});
 });

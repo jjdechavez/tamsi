@@ -17,7 +17,7 @@
       "file": "src/routes/index.ts",
       "insertBefore": "// FEATURE_ROUTES",
       "lines": [
-        "  { path: \"/auth\", handler: authHandler },"
+        "  { path: \"/auth/**\", handler: authHandler },"
       ]
     }
   ]
