@@ -160,8 +160,8 @@ export default defineTamsiConfig({
 
 #### Config reference
 
-- `host: string` (default `0.0.0.0`)
-  Host to listen on when running `tamsi dev` or `tamsi start`.
+- `host: string` (default `localhost` for `tamsi dev`, `0.0.0.0` for `tamsi start`)
+  Host to listen on. `--host` (dev) or the `HOST` env var (start) takes precedence.
 - `port: number` (default `3000`)
   Port to listen on when running `tamsi dev` or `tamsi start`.
 - `routes: TamsiRoute[]` (default `[]`)
@@ -169,7 +169,10 @@ export default defineTamsiConfig({
 - `routesBasePath: string` (default `""`)
   Prefix added to all routes (e.g. `"/api"`).
 - `middlewares: TamsiMiddleware[]` (default `[]`)
-  Global middleware applied to all requests.
+  Global middleware applied to all requests. `handler` may be a middleware
+  function or a module path (e.g. `"./src/middleware.ts"`, resolved from the
+  working directory) whose default export is the middleware. `tamsi build`
+  bundles path handlers into `dist/middlewares/`.
 - `serveStatic.publicDir: string | false` (default `false`)
   Directory of static assets to serve. Disabled when `false` or unset.
 - `serveStatic.publicPath: string` (default `"/public"`)
@@ -177,9 +180,10 @@ export default defineTamsiConfig({
 - `health: { enabled?: boolean; path?: string }` (default enabled, path `"/health"`)
   Built-in health endpoint.
 - `shutdownTimeoutMs: number` (default `10000`)
-  Time limit for graceful shutdown hooks.
+  Time limit for each graceful shutdown phase (request draining, then hooks).
 - `onBeforeClose: () => void | Promise<void>`
-  Hook called before the server closes.
+  Hook called after the server stops accepting requests and in-flight
+  requests finish.
 
 **Notes**
 
@@ -221,8 +225,16 @@ export default defineTamsiConfig({
 
 ### Shutdown hooks
 
-Use `onBeforeClose` to run cleanup logic during a graceful shutdown. The CLI
-waits for this hook before closing the listener, with a timeout guard.
+Use `onBeforeClose` to run cleanup logic during a graceful shutdown. On
+`SIGINT`/`SIGTERM` Tamsi:
+
+1. stops accepting new connections and waits for in-flight requests to finish
+   (open connections are force-closed after `shutdownTimeoutMs`);
+2. runs `onBeforeClose` (also bounded by `shutdownTimeoutMs`);
+3. exits with code `0`, or `1` if draining or a hook failed.
+
+Because hooks run after draining, resources such as database pools stay
+available until the last request completes.
 
 ```ts
 import { defineTamsiConfig } from "tamsi";
@@ -333,6 +345,12 @@ NODE_ENV=production tamsi start --outDir dist
 Notes:
 
 - `tamsi start` requires `dist/server.mjs`.
+- `tamsi start` forwards `SIGINT`/`SIGTERM` to the server process, so
+  container stop signals trigger a graceful shutdown. If the server is killed
+  by a signal, `tamsi start` exits with `128 + signal number`.
+- `dist/server.mjs` only imports from `tamsi`, so a project that depends on
+  `tamsi` alone can run it (including with pnpm's isolated `node_modules`). You
+  can also run `node dist/server.mjs` directly.
 - Use `--clean` with `tamsi build` to remove the output directory before building.
 
 See the CLI section above for full start flags.

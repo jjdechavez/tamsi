@@ -23,3 +23,19 @@ describe("resolveServerOptions", () => {
     );
   });
 });
+
+describe("resolveServerOptions host", () => {
+  it("uses config.host when --host is not passed", () => {
+    expect(resolveServerOptions({}, { host: "0.0.0.0" }).host).toBe("0.0.0.0");
+  });
+
+  it("prefers --host over config.host", () => {
+    expect(
+      resolveServerOptions({ host: "127.0.0.1" }, { host: "0.0.0.0" }).host
+    ).toBe("127.0.0.1");
+  });
+
+  it("defaults to localhost", () => {
+    expect(resolveServerOptions({}, {}).host).toBe("localhost");
+  });
+});
