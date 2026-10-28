@@ -1,13 +1,11 @@
 import { defineCommand } from "citty";
-import { Listener } from "listhen";
 import consola from "consola";
-import { dirname, resolve } from "node:path";
 import chokidar from "chokidar";
+import type { serve } from "h3";
+import { dirname, resolve } from "node:path";
 
 import { startServer } from "../../cli.js";
-import { type TamsiConfig, createShutdownHooks, runBeforeClose } from "../../index.js";
-import { ServerHttp2Session } from "node:http2";
-import { serve } from "h3";
+import { type TamsiConfig, closeTamsiServer, createShutdownHooks } from "../../index.js";
 
 export default defineCommand(
   {
@@ -129,21 +127,28 @@ export default defineCommand(
         const hooks = createShutdownHooks(config ?? {});
         const timeoutMs = config?.shutdownTimeoutMs ?? 10000;
         if (!args.quiet) {
-          consola.info("🪶 Tamsi is landing... running shutdown hooks.");
+          consola.info("🪶 Tamsi is landing... draining requests and running shutdown hooks.");
         }
-        await runBeforeClose(hooks, {
-          timeoutMs,
-          onTimeout: () => {
-            consola.warn(`Shutdown hooks timed out after ${timeoutMs}ms.`);
-          }
-        });
 
         await watcher.close();
-        await stop();
+        const ok = await closeTamsiServer(listener, hooks, {
+          timeoutMs,
+          onTimeout: (phase) => {
+            consola.warn(
+              phase === "drain"
+                ? `Requests did not drain within ${timeoutMs}ms. Closing open connections.`
+                : `Shutdown hooks timed out after ${timeoutMs}ms.`
+            );
+          },
+          onError: (error) => {
+            consola.error(error);
+          }
+        });
+        listener = undefined;
         if (!args.quiet) {
           consola.info("🌿 Tamsi shutdown complete.");
         }
-        process.exit(0);
+        process.exit(ok ? 0 : 1);
       };
 
       process.on("SIGINT", shutdown);

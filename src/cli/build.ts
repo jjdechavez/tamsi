@@ -25,6 +25,12 @@ interface BuildOptions {
 	envFile?: string;
 }
 
+interface MiddlewareEntry {
+	id: string;
+	entryName: string;
+	sourcePath: string;
+}
+
 export async function buildProject(options: BuildOptions) {
 	const { cwd, configFile, outDir, clean } = options;
 	const resolver = createJiti(import.meta.url, {
@@ -51,9 +57,16 @@ export async function buildProject(options: BuildOptions) {
 
 	await mkdir(resolvedOutDir, { recursive: true });
 
+	// String middleware handlers are module paths, not imports, so esbuild
+	// cannot discover them from the config. Bundle each one as its own entry.
+	const middlewareEntries = collectMiddlewareEntries(config, cwd);
+
 	await build({
 		entryPoints: {
 			"tamsi.config": resolvedConfigFile,
+			...Object.fromEntries(
+				middlewareEntries.map((entry) => [entry.entryName, entry.sourcePath]),
+			),
 		},
 		outdir: resolvedOutDir,
 		bundle: true,
@@ -70,6 +83,11 @@ export async function buildProject(options: BuildOptions) {
 
 	await copyPublicAssets(config, configDir, resolvedOutDir);
 	await writeFile(
+		resolve(resolvedOutDir, "tamsi.middlewares.mjs"),
+		renderMiddlewareManifest(middlewareEntries),
+		"utf8",
+	);
+	await writeFile(
 		resolve(resolvedOutDir, "server.mjs"),
 		renderServerEntry(),
 		"utf8",
@@ -85,68 +103,53 @@ export async function buildProject(options: BuildOptions) {
 }
 
 function renderServerEntry() {
-	return `import { createTamsiApp, createShutdownHooks, runBeforeClose, bootLog } from "tamsi";
-import { serve } from "h3";
-import { setupDotenv } from "c12";
-import { dirname } from "node:path";
+	return `import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { loadTamsiEnv, runTamsiServer } from "tamsi";
 
 const baseDir = dirname(fileURLToPath(import.meta.url));
-const envFile = process.env.tamsi_ENV_FILE;
-await setupDotenv({ cwd: process.cwd(), fileName: envFile || ".env" });
+await loadTamsiEnv();
 
 const { default: config } = await import("./tamsi.config.mjs");
+const { default: middlewares } = await import("./tamsi.middlewares.mjs");
 
-const envPort = process.env.PORT ? Number(process.env.PORT) : undefined;
-const port = Number.isFinite(envPort) ? envPort : (config.port ?? 3000);
-const host = process.env.HOST ?? "0.0.0.0";
-
-const runtimeConfig = { ...config };
-if (process.env.tamsi_NO_HEALTH === "1") {
-  runtimeConfig.health = { enabled: false };
-} else if (process.env.tamsi_HEALTH_PATH) {
-  runtimeConfig.health = { enabled: true, path: process.env.tamsi_HEALTH_PATH };
-}
-
-const app = createTamsiApp(runtimeConfig, { baseDir });
-const listener = serve(app, {
-  port,
-  hostname: host,
-});
-
-if (process.env.tamsi_QUIET === "1") {
-  console.log(listener.url);
-} else {
-  bootLog({
-    version: process.env.tamsi_VERSION,
-    mode: "Production",
-    url: listener.url
-  });
-}
-
-let shuttingDown = false;
-const shutdown = async () => {
-  if (shuttingDown) return;
-  shuttingDown = true;
-
-  const hooks = createShutdownHooks(runtimeConfig ?? {});
-  const timeoutMs = runtimeConfig.shutdownTimeoutMs ?? 10000;
-  await runBeforeClose(hooks, {
-    timeoutMs,
-    onTimeout: () => {
-      console.warn(
-        \`Shutdown hooks timed out after \${timeoutMs}ms.\`
-      );
+await runTamsiServer(config, {
+  baseDir,
+  importMiddleware: (id) => {
+    const load = middlewares[id];
+    if (!load) {
+      throw new Error("Middleware not found in build output: " + id);
     }
-  });
-
-  await listener.close();
-  process.exit(0);
-};
-
-process.on("SIGINT", shutdown);
-process.on("SIGTERM", shutdown);
+    return load();
+  },
+});
 `;
+}
+
+function collectMiddlewareEntries(
+	config: TamsiConfig,
+	cwd: string,
+): MiddlewareEntry[] {
+	const ids = new Set<string>();
+	for (const item of config.middlewares ?? []) {
+		if (typeof item.handler === "string") {
+			ids.add(item.handler);
+		}
+	}
+
+	return [...ids].map((id, index) => ({
+		id,
+		entryName: `middlewares/${index}`,
+		sourcePath: resolve(cwd, id),
+	}));
+}
+
+function renderMiddlewareManifest(entries: MiddlewareEntry[]) {
+	const lines = entries.map(
+		(entry) =>
+			`  ${JSON.stringify(entry.id)}: () => import(${JSON.stringify(`./${entry.entryName}.mjs`)}),`,
+	);
+	return `export default {\n${lines.join("\n")}\n};\n`;
 }
 
 async function copyPublicAssets(
@@ -178,13 +181,15 @@ async function copyPublicAssets(
 async function validateBuildOutputs(outDir: string) {
 	const serverPath = resolve(outDir, "server.mjs");
 	const configPath = resolve(outDir, "tamsi.config.mjs");
+	const middlewaresPath = resolve(outDir, "tamsi.middlewares.mjs");
 
 	try {
 		await access(serverPath);
 		await access(configPath);
+		await access(middlewaresPath);
 	} catch {
 		consola.error(
-			`Build incomplete. Expected ${serverPath} and ${configPath}. Run "tamsi build --clean".`,
+			`Build incomplete. Expected ${serverPath}, ${configPath} and ${middlewaresPath}. Run "tamsi build --clean".`,
 		);
 		throw new Error("Build incomplete.");
 	}

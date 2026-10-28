@@ -30,7 +30,7 @@ export function resolveServerOptions(
 	config: TamsiConfig,
 ): ResolvedServerOptions {
 	const port = parsePort(args.port) ?? config.port ?? 3000;
-	const host = args.host ?? "localhost";
+	const host = args.host ?? config.host ?? "localhost";
 
 	return {
 		port,

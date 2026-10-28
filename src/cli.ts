@@ -2,70 +2,22 @@
 import { defineCommand, runMain } from "citty";
 import { createJiti } from "jiti";
 import { consola } from "consola";
-import { serve, type EventHandler } from "h3";
+import { serve } from "h3";
 import { resolve, dirname } from "node:path";
 import {
   bootLog,
   createTamsiApp,
   loadTamsiConfig,
+  resolveTamsiMiddlewares,
   type TamsiConfig
 } from "./index.js";
 import { resolveServerOptions } from "./cli/resolve.js";
-
-const defaultStartExtensions = new Set([".js", ".mjs", ".cjs"]);
 
 function createResolver(cwd: string, moduleCache: boolean) {
   return createJiti(import.meta.url, {
     interopDefault: true,
     moduleCache
   });
-}
-
-async function resolveMiddlewareHandlers(
-  config: TamsiConfig,
-  cwd: string,
-  resolver: ReturnType<typeof createResolver>,
-  allowTs: boolean
-): Promise<TamsiConfig> {
-  if (!config.middlewares?.length) {
-    return config;
-  }
-
-  const middlewares = await Promise.all(
-    config.middlewares.map(async (item) => {
-      if (typeof item.handler !== "string") {
-        return item;
-      }
-
-      const resolvedPath = resolve(cwd, item.handler);
-      if (!allowTs) {
-        const ext = resolvedPath.slice(resolvedPath.lastIndexOf("."));
-        if (ext && !defaultStartExtensions.has(ext)) {
-          throw new Error(
-            `Tamsi start only supports built middleware. Found ${item.handler}. Use tamsi dev or build first.`
-          );
-        }
-      }
-
-      const mod = await resolver.import<EventHandler>(resolvedPath, {
-        default: true
-      });
-
-      if (typeof mod !== "function") {
-        throw new TypeError(`Invalid middleware export from ${item.handler}`);
-      }
-
-      return {
-        ...item,
-        handler: mod
-      };
-    })
-  );
-
-  return {
-    ...config,
-    middlewares
-  };
 }
 
 type TamsiServerStartupArgs = {
@@ -107,17 +59,18 @@ export async function startServer(
     config
   );
 
-  const resolvedConfig = await resolveMiddlewareHandlers(
+  const resolvedConfig = await resolveTamsiMiddlewares(
     applyHealthOverrides(config, options),
-    cwd,
-    resolver,
-    mode === "dev"
+    (id) => resolver.import(resolve(cwd, id), { default: true })
   );
 
   const app = createTamsiApp(resolvedConfig, { baseDir: configDir });
   const listener = serve(app, {
     port,
     hostname: host,
+    // Tamsi prints its own boot log and owns graceful shutdown.
+    silent: true,
+    gracefulShutdown: false
   });
 
   const url = listener.url;

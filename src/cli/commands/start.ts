@@ -4,6 +4,8 @@ import { access } from "node:fs/promises";
 import { spawn } from "node:child_process";
 import { resolve } from "node:path";
 
+import { buildStartEnv, forwardSignals, toExitCode } from "../start-process.js";
+
 export default defineCommand(
   {
     meta: {
@@ -54,33 +56,24 @@ export default defineCommand(
         throw new Error("Missing build output.");
       }
 
-      const env = { ...process.env };
-      if (typeof args.port === "string") {
-        env.PORT = args.port;
-      }
-      if (typeof args.host === "string") {
-        env.HOST = args.host;
-      }
-      if (typeof args.env === "string") {
-        env.TAMSI_ENV_FILE = args.env;
-      }
-      if (args.quiet) {
-        env.TAMSI_QUIET = "1";
-      }
-      if (typeof args.health === "string") {
-        env.TAMSI_HEALTH_PATH = args.health;
-      }
-      if (args.noHealth) {
-        env.TAMSI_NO_HEALTH = "1";
-      }
+      const env = buildStartEnv({
+        port: typeof args.port === "string" ? args.port : undefined,
+        host: typeof args.host === "string" ? args.host : undefined,
+        env: typeof args.env === "string" ? args.env : undefined,
+        quiet: Boolean(args.quiet),
+        health: typeof args.health === "string" ? args.health : undefined,
+        noHealth: Boolean(args.noHealth)
+      });
 
       const child = spawn(process.execPath, [serverPath], {
         stdio: "inherit",
         env
       });
+      const stopForwarding = forwardSignals(child);
 
-      child.on("exit", (code) => {
-        process.exit(code ?? 0);
+      child.on("exit", (code, signal) => {
+        stopForwarding();
+        process.exit(toExitCode(code, signal));
       });
     }
   }
